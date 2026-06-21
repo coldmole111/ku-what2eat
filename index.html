@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KU What2Eat Premium | 고려대 안암 메뉴 추천 가이드</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-color: #a50034; /* 고려대 크림슨 */
+            --accent-hover: #7d0026;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.3rem;
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        header h1 span { color: var(--accent-color); }
+        header p { color: var(--text-muted); font-size: 1.05rem; }
+
+        main { width: 100%; max-width: 900px; }
+
+        /* 1. 랜덤 추천 섹션 */
+        .recommend-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        .category-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: #21262d;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #30363d;
+            border-color: #8b949e;
+            transform: translateY(-2px);
+        }
+
+        .result-box {
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 20px;
+        }
+
+        #result-place { font-size: 0.9rem; color: var(--accent-color); font-weight: 700; margin-bottom: 4px; }
+        #result-text { font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        #result-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 6px; }
+        #result-time { color: #ff7b72; font-size: 0.85rem; font-weight: 600; }
+
+        /* 2. 아카이브 탭 메뉴 구조 */
+        .section-title {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 20px;
+            padding-left: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .tab-header {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab-link {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tab-link.active {
+            color: #fff;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: #444c56;
+        }
+
+        .card-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: rgba(165, 0, 52, 0.15);
+            color: #ff6b8b;
+        }
+
+        .card-title { font-size: 1.15rem; color: #fff; margin-bottom: 4px; font-weight: 700; }
+        .card-time { font-size: 0.8rem; color: #ff7b72; margin-bottom: 10px; font-weight: 500; }
+        .card-text { color: var(--text-muted); font-size: 0.88rem; white-space: pre-line; }
+
+        .pop { animation: popEffect 0.3s ease-out; }
+        @keyframes popEffect {
+            0% { transform: scale(0.96); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><span>KU</span> What2Eat 식당 가이드 🐯</h1>
+        <p>5대 교내 학생식당 및 안암역 대표 맛집 20선 공식 시간 반영 가이드</p>
+    </header>
+
+    <main>
+        <!-- 1. 랜덤 추천 섹션 -->
+        <section class="recommend-section">
+            <div class="category-buttons">
+                <button class="btn" onclick="pickMenu('all')">🎲 대통합 전체 랜덤</button>
+                <button class="btn" onclick="pickMenu('cafeteria')">🏫 5대 학생식당만</button>
+                <button class="btn" onclick="pickMenu('korean')">🇰🇷 안암 한식/고기</button>
+                <button class="btn" onclick="pickMenu('asian')">🍜 안암 일식/중식</button>
+                <button class="btn" onclick="pickMenu('western')">🍔 안암 양식/기타</button>
+            </div>
+            <div class="result-box">
+                <div id="result-place"></div>
+                <div id="result-text">카테고리를 눌러 메뉴를 매칭하세요!</div>
+                <div id="result-sub">빅데이터 기반 안암 밥집 큐레이션</div>
+                <div id="result-time"></div>
+            </div>
+        </section>
+
+        <!-- 2. 아카이브 열람 섹션 -->
+        <section>
+            <h2 class="section-title">식당 아카이브 가이드북</h2>
+            <div class="tab-header">
+                <button class="tab-link active" onclick="openTab(event, 'tab-cafeteria')">🏫 5대 학생식당</button>
+                <button class="tab-link" onclick="openTab(event, 'tab-korean')">🇰🇷 한식 (7)</button>
+                <button class="tab-link" onclick="openTab(event, 'tab-asian')">🍜 일식/중식 (7)</button>
+                <button class="tab-link" onclick="openTab(event, 'tab-western')">🍔 양식/분식 (6)</button>
+            </div>
+
+            <!-- 탭 1: 학생식당 5개 -->
+            <div id="tab-cafeteria" class="tab-content active">
+                <div class="card-grid" id="grid-cafeteria"></div>
+            </div>
+
+            <!-- 탭 2: 한식 -->
+            <div id="tab-korean" class="tab-content">
+                <div class="card-grid" id="grid-korean"></div>
+            </div>
+
+            <!-- 탭 3: 일중식 -->
+            <div id="tab-asian" class="tab-content">
+                <div class="card-grid" id="grid-asian"></div>
+            </div>
+
+            <!-- 탭 4: 양식분식 -->
+            <div id="tab-western" class="tab-content">
+                <div class="card-grid" id="grid-western"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 전역 레스토랑 데이터셋 (공식 홈페이지 및 네이버 플레이스 표기 시간 검증 반영)
+        const restaurants = {
+            cafeteria: [
+                { name: "자연계 학생식당", type: "교내 학식", desc: "애기능생활관 2층 위치. 평일 중식 및 석식 푸드코트 형태 운영. 이공계생 필수 코스.", time: "평일 중식 11:00~14:00 / 석식 17:00~18:30 (토/일 휴무)" },
+                { name: "안암학사 식당", type: "교내 학식", desc: "고려대학교 기숙사 단지 내 위치. 사생 및 일반 학우 대상 정량·자율배식 식단.", time: "매일 조식 07:30~09:00 / 중식 11:30~13:30 / 석식 17:30~19:00" },
+                { name: "산학관 식당", type: "교내 학식", desc: "정차 정보 산학관 지하 1층 위치. 외부 위탁 급식 형태로 운영되어 조용하게 가성비 혼밥 가능.", time: "평일 중식 한정 운영 11:30~13:30" },
+                { name: "교우회관 학생식당", type: "교내 학식", desc: "교우회관 지하 1층에 위치한 한식 뷔페 및 단품 정식 위주의 식당. 정갈한 구성이 특징.", time: "평일 중식 한정 운영 11:30~13:30 (주말 휴무)" },
+                { name: "학생회관 학생식당", type: "교내 학식", desc: "인문계 캠퍼스 학생회관 2층. '천원의 아침밥' 상시 운영처 및 평일 중식 피크 스팟.", time: "평일 조식 08:00~09:30 / 중식 11:00~14:00 (주말 휴무)" }
+            ],
+            korean: [
+                { name: "유자유김치떡볶이 안암본점", type: "한식/분식", desc: "안암 대표 시그니처 김치떡볶이와 상큼한 유자주 조합. 밥 비벼 먹기로 피날레.", time: "매일 10:30 ~ 새벽 03:00 (라스트오더 02:15)" },
+                { name: "이모네 김치찌개", type: "한식", desc: "김치찌개 주문 시 계란말이가 기본 세팅되는 밥도둑 식당. 인원수대로 주문 시 라면사리 무한리필.", time: "월~토 10:00 ~ 21:30 (매주 일요일 정기휴무)" },
+                { name: "고기반찬", type: "한식", desc: "가성비 백반 제육 정식과 불고기 정식 맛집. 공기밥 셀프 리필이 가능한 안암역 혼밥 명소.", time: "월~토 10:00 ~ 21:00 (매주 일요일 정기휴무)" },
+                { name: "제기동 한상차림", type: "한식", desc: "정갈한 밑반찬과 메인 찌개, 생선구이가 함께 나오는 가성비 집밥 정식 식당.", time: "월~토 11:00 ~ 20:30 (일요일 정기휴무)" },
+                { name: "안암동 형제집", type: "한식", desc: "참살이길 노포 감성. 달콤 짭조름한 연탄 불고기와 매콤한 오징어불고기 믹스 메뉴가 인기.", time: "매일 16:00 ~ 24:00" },
+                { name: "동우설렁탕", type: "한식", desc: "안암오거리 부근 맑고 깊은 정통 설렁탕 노포. 소면과 공기밥 무상 추가 및 깍두기 국물 배합이 특징.", time: "월~토 10:00 ~ 21:00 (브레이크 15:00~17:00, 일 휴무)" },
+                { name: "참살이 감자탕", type: "한식", desc: "24시간 뚝배기 뼈해장국과 감자탕을 제공하여 시험 기간이나 밤샘 술자리 후 해장으로 애용되는 곳.", time: "매일 00:00 ~ 24:00 (연중무휴 24시간)" }
+            ],
+            asian: [
+                { name: "라멘 메이진", type: "일식", desc: "개운사길 골목 위치. 불맛이 살아있는 차슈와 진한 돈코츠 및 카라미소 육수가 강점.", time: "월~토 11:00 ~ 21:00 (브레이크 15:00~17:00, 일 휴무)" },
+                { name: "돈까스 하우스", type: "일식", desc: "바삭하고 두툼한 수제 왕돈까스 및 매운돈까스 전문점. 추억의 스프와 가성비 넘치는 양.", time: "매일 10:30 ~ 21:30" },
+                { name: "고대 마라탕", type: "중식", desc: "학우들이 혈중 마라 농도를 채울 때 찾는 곳. 깔끔하게 정돈된 재료바와 바삭한 꿔바로우.", time: "매일 11:00 ~ 22:00" },
+                { name: "야마토 텐동", type: "일식", desc: "안암역 정통 텐동 맛집. 바삭한 식감 유지를 위해 온센타마고와 튀김 퀄리티에 집중하는 곳.", time: "월~토 11:00 ~ 20:30 (브레이크 15:00~17:00, 일 휴무)" },
+                { name: "중화요리 백두산", type: "중식", desc: "참살이길 대표 가성비 중식당. 양 많고 불맛 확실한 쟁반짜장과 미니 탕수육 세트가 시그니처.", time: "매일 10:30 ~ 21:00" },
+                { name: "연어이야기", type: "일식", desc: "신선하고 두터운 연어가 가득 올라간 사케동과 생연어초밥 전문. 깔끔한 한 끼 식사에 최적.", time: "월~토 11:30 ~ 21:00 (브레이크 15:00~16:30, 일 휴무)" },
+                { name: "개운사 우동공방", type: "일식", desc: "매장에서 밀가루로 직접 제면하는 탱글탱글한 수제 우동 전문점. 붓카케 우동 강추.", time: "월~토 11:00 ~ 20:30 (브레이크 15:00~17:00, 일 휴무)" }
+            ],
+            western: [
+                { name: "영철버거 안암본점", type: "양식/기타", desc: "고려대 역사와 기부를 함께해 온 시그니처 스트리트 버거. 가성비 세트 메뉴가 일품.", time: "매일 10:00 ~ 22:00" },
+                { name: "매스플레이트 안암점", type: "양식/기타", desc: "이탈리안 퓨전 레스토랑. 목살 스테이크 샐러드와 꾸덕한 스파게티, 필라프 양이 푸짐함.", time: "매일 11:30 ~ 21:30 (라스트오더 20:30)" },
+                { name: "고대앞 피자마루", type: "양식/기타", desc: "그린티 웰빙 도우 기반 가성비 피자 스팟. 팀 프로젝트 종료 후 가벼운 피맥 장소로 제격.", time: "매일 11:00 ~ 23:00" },
+                { name: "고른햇살", type: "양식/기타", desc: "안암역 불패의 분식 메카. 터질 듯 채워진 참치김밥과 치즈 찰순대, 라볶이의 정석 조합.", time: "매일 06:30 ~ 23:30" },
+                { name: "프로마치", type: "양식/기타", desc: "샌드위치 매니아들을 위한 파니니 및 치아바타 정통 샌드위치. 가벼우면서도 아주 알찬 구성.", time: "월~토 11:00 ~ 21:00 (일요일 정기휴무)" },
+                { name: "무르무르 드 구스토", type: "양식/기타", desc: "안암역 3번 출구 앞 위치. 고급스러운 파스타와 통삼겹 리조또로 교수님 식사 대접 및 소개팅 명소.", time: "매일 11:30 ~ 21:00 (브레이크 15:00~16:30)" }
+            ]
+        };
+
+        // 초기 화면 카드 동적 렌더링
+        function renderCards() {
+            for (const key in restaurants) {
+                const grid = document.getElementById(`grid-${key}`);
+                restaurants[key].forEach(rest => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <span class="card-tag">${rest.type}</span>
+                        <h3 class="card-title">${rest.name}</h3>
+                        <p class="card-time">⏰ 공식 영업시간: ${rest.time}</p>
+                        <p class="card-text">${rest.desc}</p>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // 탭 전환 메커니즘
+        function openTab(evt, tabId) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+            const tabLinks = document.getElementsByClassName("tab-link");
+            for (let i = 0; i < tabLinks.length; i++) {
+                tabLinks[i].classList.remove("active");
+            }
+            document.getElementById(tabId).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // 랜덤 추출 연산 로직
+        function pickMenu(category) {
+            let pool = [];
+            if (category === 'all') {
+                pool = [...restaurants.cafeteria, ...restaurants.korean, ...restaurants.asian, ...restaurants.western];
+            } else {
+                pool = restaurants[category];
+            }
+
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            const selected = pool[randomIndex];
+
+            const resPlace = document.getElementById('result-place');
+            const resText = document.getElementById('result-text');
+            const resSub = document.getElementById('result-sub');
+            const resTime = document.getElementById('result-time');
+            const resultBox = document.querySelector('.result-box');
+
+            resPlace.innerText = `[${selected.type}]`;
+            resText.innerText = selected.name;
+            resSub.innerText = selected.desc;
+            resTime.innerText = `⏰ 공식 영업시간: ${selected.time}`;
+
+            resultBox.classList.remove('pop');
+            void resultBox.offsetWidth; // 리플로우 강제 초기화
+            resultBox.classList.add('pop');
+        }
+
+        // 윈도우 로드 시 즉시 카드 배포
+        window.onload = renderCards;
+    </script>
+</body>
+</html>
